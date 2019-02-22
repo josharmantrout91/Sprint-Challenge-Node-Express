@@ -7,14 +7,14 @@ function checkActionDescLength() {
   return function(req, res, next) {
     let actionDescLength = req.body.description.length;
     console.log(actionDescLength);
-    if (actionDescLength <= 128) {
-      next();
-    } else {
+    if (actionDescLength > 128) {
       res
         .status(404)
         .json(
           "We aint tryna read a novel! Keep that description under 128 characters fool!!"
         );
+    } else {
+      next();
     }
   };
 }
@@ -173,19 +173,45 @@ router.put("/actions/:id", async (req, res) => {
 
 // ********** DELETE METHODS ********** //
 
-// DELETE to /api/users/:id
-router.delete("/users/:id", async (req, res) => {
+// DELETE to /api/projects/:id
+router.delete("/projects/:id", async (req, res) => {
   try {
-    count = await userDb.remove(req.params.id);
+    count = await projectDb.remove(req.params.id);
     if (count) {
-      res.status(200).json({ message: "The user has fallen to the Dark Lord" });
+      res
+        .status(200)
+        .json({ count, message: "We got rid of that project yall!" });
     } else {
       res
         .status(404)
-        .json({ message: "The user with the specified ID does not exist." });
+        .json({ message: "We aint even got a project to delete yall" });
     }
   } catch (error) {
-    res.status(500).json({ error: "The user could not be removed" });
+    res.status(500).json({
+      error:
+        "Sorry but this project is stickin around for now... I couldnt remove it!"
+    });
+  }
+});
+
+// DELETE to /api/actions/:id
+router.delete("/actions/:id", async (req, res) => {
+  try {
+    count = await actionDb.remove(req.params.id);
+    if (count) {
+      res
+        .status(200)
+        .json({ count, message: "We got rid of that action yall!" });
+    } else {
+      res
+        .status(404)
+        .json({ message: "We aint even got a action to delete yall" });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error:
+        "Sorry but this action is stickin around for now... I couldnt remove it!"
+    });
   }
 });
 
