@@ -6,6 +6,7 @@ const actionDb = require("./helpers/actionModel.js");
 function checkActionDescLength() {
   return function(req, res, next) {
     let actionDescLength = req.body.description.length;
+    console.log(actionDescLength);
     if (actionDescLength <= 128) {
       next();
     } else {
@@ -48,7 +49,13 @@ router.post("/actions", async (req, res) => {
   try {
     const action = await actionDb.insert(req.body);
 
-    if (req.body.project_id && req.body.description && req.body.notes) {
+    if (req.body.description.length > 128) {
+      res
+        .status(404)
+        .json(
+          "We aint tryna read a novel! Keep that description under 128 characters fool!!"
+        );
+    } else if (req.body.project_id && req.body.description && req.body.notes) {
       res.status(201).json(action);
     } else {
       res.status(400).json({
@@ -110,6 +117,76 @@ router.get("/projects/:id/actions", async (req, res) => {
 
 // ********** UPDATE METHODS ********** //
 
+// PUT to /api/projects/:id
+router.put("/projects/:id", async (req, res) => {
+  try {
+    updated = await projectDb.update(req.params.id, req.body);
+
+    if (!req.params.id) {
+      res
+        .status(404)
+        .json({ message: "We aint got no project with that ID yall" });
+    } else if (req.body.name && req.body.description) {
+      res.status(200).json(updated);
+    } else {
+      res.status(400).json({
+        errorMessage:
+          "Just because we doin a update dont mean you can leave out a project id, description, and notes yall"
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error: "That action must be set in stone cuz we cant make NO CHANGES yall"
+    });
+  }
+});
+
+// PUT to /api/actions/:id
+router.put("/actions/:id", async (req, res) => {
+  try {
+    updated = await actionDb.update(req.params.id, req.body);
+
+    if (!req.params.id) {
+      res
+        .status(404)
+        .json({ message: "We aint got no action with that ID yall" });
+    } else if (req.body.description.length > 128) {
+      res
+        .status(404)
+        .json(
+          "We aint tryna read a novel! Keep that description under 128 characters fool!!"
+        );
+    } else if (req.body.project_id && req.body.description && req.body.notes) {
+      res.status(200).json(updated);
+    } else {
+      res.status(400).json({
+        errorMessage:
+          "Just because we doin a update dont mean you can leave out a project id, notes, and description yall"
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error: "That action must be set in stone cuz we cant make NO CHANGES yall"
+    });
+  }
+});
+
 // ********** DELETE METHODS ********** //
+
+// DELETE to /api/users/:id
+router.delete("/users/:id", async (req, res) => {
+  try {
+    count = await userDb.remove(req.params.id);
+    if (count) {
+      res.status(200).json({ message: "The user has fallen to the Dark Lord" });
+    } else {
+      res
+        .status(404)
+        .json({ message: "The user with the specified ID does not exist." });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "The user could not be removed" });
+  }
+});
 
 module.exports = router;
