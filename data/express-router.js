@@ -3,20 +3,18 @@ const express = require("express");
 const projectDb = require("./helpers/projectModel.js");
 const actionDb = require("./helpers/actionModel.js");
 
-function checkActionDescLength() {
-  return function(req, res, next) {
-    let actionDescLength = req.body.description.length;
-    console.log(actionDescLength);
-    if (actionDescLength > 128) {
-      res
-        .status(404)
-        .json(
-          "We aint tryna read a novel! Keep that description under 128 characters fool!!"
-        );
-    } else {
-      next();
-    }
-  };
+function checkActionDescLength(req, res, next) {
+  let actionDescLength = req.body.description.length;
+  console.log(actionDescLength);
+  if (actionDescLength > 128) {
+    res
+      .status(404)
+      .json(
+        "We aint tryna read a novel! Keep that description under 128 characters fool!!"
+      );
+  } else {
+    next();
+  }
 }
 
 const router = express.Router();
@@ -45,17 +43,11 @@ router.post("/projects", async (req, res) => {
 });
 
 // POST request to /api/actions
-router.post("/actions", async (req, res) => {
+router.post("/actions", checkActionDescLength, async (req, res) => {
   try {
     const action = await actionDb.insert(req.body);
 
-    if (req.body.description.length > 128) {
-      res
-        .status(404)
-        .json(
-          "We aint tryna read a novel! Keep that description under 128 characters fool!!"
-        );
-    } else if (req.body.project_id && req.body.description && req.body.notes) {
+    if (req.body.project_id && req.body.description && req.body.notes) {
       res.status(201).json(action);
     } else {
       res.status(400).json({
